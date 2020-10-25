@@ -1,0 +1,100 @@
+plugins {
+    id 'java-library'
+    id 'groovy'
+    id 'maven-publish'
+    id 'signing'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    // Spock for testing
+    testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.0-M3-groovy-3.0'
+}
+
+group = 'de.peetzen.dropwizard'
+
+test {
+    useJUnitPlatform()
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'dropwizard-metrics-tagging'
+            from components.java
+            pom {
+                name = 'Support for Dropwizard metric names with encoded tags'
+                description = 'Dropwizard metrics (v4.x) do not natively support tags, however tags can be encoded as part' +
+                        ' of the metric name. This library offers a modified MetricName class for converting tagged ' +
+                        'metrics to the legay format. The MetricName class is going to be part of Dropwizard metrics v5.'
+                url = 'https://github.com/peetzen/dropwizard-metrics-tagging'
+                licenses {
+                    license {
+                        name = "Apache License, Version 2.0"
+                        url = "https://www.apache.org/licenses/LICENSE-2.0"
+                        distribution = "repo"
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'peetzen'
+                        name = 'Markus Peetzen'
+                        email = 'dev@peetzen.de'
+                    }
+                }
+                scm {
+                    url = 'https://github.com/peetzen/dropwizard-metrics-tagging'
+                    connection = 'scm:git:git://github.com/peetzen/dropwizard-metrics-tagging.git'
+                    developerConnection = 'scm:git:git://github.com/peetzen/dropwizard-metrics-tagging.git'
+                }
+                issueManagement {
+                    system = "GitHub"
+                    url = 'https://github.com/peetzen/dropwizard-metrics-tagging/issues'
+                }
+            }
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+
+            credentials {
+                username project.findProperty('sonatypeOssUsername') ?: System.getenv('SONATYPE_OSS_USERNAME')
+                password project.findProperty('sonatypeOssPassword') ?: System.getenv('SONATYPE_OSS_PASSWORD')
+            }
+        }
+    }
+}
+
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+signing {
+    required { isReleaseVersion && gradle.taskGraph.hasTask("publish") }
+    sign publishing.publications.mavenJava
+}
+tasks.withType(Sign) {
+    onlyIf { isReleaseVersion }
+}
+javadoc {
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+    }
+}
