@@ -15,7 +15,8 @@ dependencies {
     testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.0-M3-groovy-3.0'
 }
 
-group = 'de.peetzen.dropwizard'
+archivesBaseName = 'metrics-tagging'
+group = 'de.peetzen.dropwizard.metrics'
 
 test {
     useJUnitPlatform()
@@ -29,13 +30,13 @@ java {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId = 'dropwizard-metrics-tagging'
+            artifactId = 'metrics-tagging'
             from components.java
             pom {
                 name = 'Support for Dropwizard metric names with encoded tags'
-                description = 'Dropwizard metrics (v4.x) do not natively support tags, however tags can be encoded as part' +
+                description = 'The Metrics library (v4.x) does not natively support tags, however tags can be encoded as part' +
                         ' of the metric name. This library offers a modified MetricName class for converting tagged ' +
-                        'metrics to the legay format. The MetricName class is going to be part of Dropwizard metrics v5.'
+                        'metrics to the legay format.'
                 url = 'https://github.com/peetzen/dropwizard-metrics-tagging'
                 licenses {
                     license {
@@ -86,13 +87,16 @@ publishing {
 }
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
 signing {
     required { isReleaseVersion && gradle.taskGraph.hasTask("publish") }
     sign publishing.publications.mavenJava
 }
+
 tasks.withType(Sign) {
     onlyIf { isReleaseVersion }
 }
+
 javadoc {
     if (JavaVersion.current().isJava9Compatible()) {
         options.addBooleanOption('html5', true)
